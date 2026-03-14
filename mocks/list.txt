@@ -1,2 +1,4 @@
 purple-laptop
 purple-note
+purple-desktop-window-I
+purple-desktop-window-II
