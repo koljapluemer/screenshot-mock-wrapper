@@ -1,3 +1,5 @@
+basic-laptop
+basic-phone
 purple-laptop
 purple-note
 purple-desktop-window-I

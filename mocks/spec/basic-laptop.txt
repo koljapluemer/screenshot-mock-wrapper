@@ -1,0 +1,5 @@
+laptop_polygon_grey.svg
+66
+133
+76
+96

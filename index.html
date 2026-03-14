@@ -1,138 +1,135 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="h-full w-full bg-gray-100 ">
 
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Screenshot Wrapper</title>
-    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
-    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Screenshot Wrapper</title>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
 </head>
 
-<body class="m-0 p-0 bg-gray-100 min-h-screen">
-    <div id="app"></div>
+<body class="m-0 p-0 bg-gray-100 h-full mx-auto p-4 max-w-2xl flex flex-col gap-4" id="app">
 </body>
 <script>
-const { createApp, ref, watch, onMounted } = Vue;
+  const { createApp, ref, watch, onMounted } = Vue;
 
-createApp({
-  setup() {
-    const mocks = ref([]);
-    const selectedMock = ref('');
-    const spec = ref(null);
-    const userImage = ref(null);
-    const canvas = ref(null);
+  createApp({
+    setup() {
+      const mocks = ref([]);
+      const selectedMock = ref('');
+      const spec = ref(null);
+      const userImage = ref(null);
+      const canvas = ref(null);
 
-    onMounted(async () => {
-      const res = await fetch('mocks/list.txt');
-      const text = await res.text();
-      mocks.value = text.trim().split('\n').filter(Boolean);
-      if (mocks.value.length) selectedMock.value = mocks.value[0];
-    });
-
-    watch(selectedMock, async (name) => {
-      if (!name) return;
-      const res = await fetch(`mocks/spec/${name}.txt`);
-      const lines = (await res.text()).trim().split('\n');
-      spec.value = {
-        img: lines[0].trim(),
-        top: +lines[1], right: +lines[2], bottom: +lines[3], left: +lines[4]
-      };
-      render();
-    });
-
-    function onUpload(e) {
-      const file = e.target.files[0];
-      if (!file) return;
-      const img = new Image();
-      img.onload = () => { userImage.value = img; render(); };
-      img.src = URL.createObjectURL(file);
-    }
-
-    function loadImg(src) {
-      return new Promise((resolve, reject) => {
-        const img = new Image();
-        img.onload = () => resolve(img);
-        img.onerror = reject;
-        img.src = src;
+      onMounted(async () => {
+        const res = await fetch('mocks/list.txt');
+        const text = await res.text();
+        mocks.value = text.trim().split('\n').filter(Boolean);
+        if (mocks.value.length) selectedMock.value = mocks.value[0];
       });
-    }
 
-    async function render() {
-      if (!spec.value || !canvas.value) return;
-      const s = spec.value;
-      const mockImg = await loadImg(`mocks/img/${s.img}`);
-      const mockW = mockImg.naturalWidth || mockImg.width;
-      const mockH = mockImg.naturalHeight || mockImg.height;
+      watch(selectedMock, async (name) => {
+        if (!name) return;
+        const res = await fetch(`mocks/spec/${name}.txt`);
+        const lines = (await res.text()).trim().split('\n');
+        spec.value = {
+          img: lines[0].trim(),
+          top: +lines[1], right: +lines[2], bottom: +lines[3], left: +lines[4]
+        };
+        render();
+      });
 
-      const innerW = mockW - s.left - s.right;
-      const innerH = mockH - s.top - s.bottom;
-
-      const ssW = userImage.value ? userImage.value.naturalWidth  : innerW;
-      const ssH = userImage.value ? userImage.value.naturalHeight : innerH;
-
-      // Scale borders proportionally using geometric mean of area ratio
-      const borderScale = Math.sqrt((ssW * ssH) / (innerW * innerH));
-      const bl = Math.round(s.left   * borderScale);
-      const bt = Math.round(s.top    * borderScale);
-      const br = Math.round(s.right  * borderScale);
-      const bb = Math.round(s.bottom * borderScale);
-
-      // Rasterize mock at scaled size so SVG stays crisp — no pixel upscaling
-      const offW = Math.round(mockW * borderScale);
-      const offH = Math.round(mockH * borderScale);
-      const offscreen = document.createElement('canvas');
-      offscreen.width  = offW;
-      offscreen.height = offH;
-      offscreen.getContext('2d').drawImage(mockImg, 0, 0, offW, offH);
-
-      const cvs = canvas.value;
-      const ctx = cvs.getContext('2d');
-      cvs.width  = bl + ssW + br;
-      cvs.height = bt + ssH + bb;
-      ctx.clearRect(0, 0, cvs.width, cvs.height);
-
-      // Scaled inner dims in the offscreen
-      const siw = offW - bl - br;
-      const sih = offH - bt - bb;
-
-      // 9-slice from offscreen: corners 1:1, edges stretched in one axis only
-      function ds(sx, sy, sw, sh, dx, dy, dw, dh) {
-        if (sw > 0 && sh > 0 && dw > 0 && dh > 0)
-          ctx.drawImage(offscreen, sx, sy, sw, sh, dx, dy, dw, dh);
+      function onUpload(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        const img = new Image();
+        img.onload = () => { userImage.value = img; render(); };
+        img.src = URL.createObjectURL(file);
       }
-      // top row
-      ds(0,      0,   bl,  bt,  0,      0,   bl,  bt);
-      ds(bl,     0,   siw, bt,  bl,     0,   ssW, bt);
-      ds(bl+siw, 0,   br,  bt,  bl+ssW, 0,   br,  bt);
-      // middle row
-      ds(0,      bt,  bl,  sih, 0,      bt,  bl,  ssH);
-      ds(bl+siw, bt,  br,  sih, bl+ssW, bt,  br,  ssH);
-      // bottom row
-      ds(0,      bt+sih, bl,  bb,  0,      bt+ssH, bl,  bb);
-      ds(bl,     bt+sih, siw, bb,  bl,     bt+ssH, ssW, bb);
-      ds(bl+siw, bt+sih, br,  bb,  bl+ssW, bt+ssH, br,  bb);
 
-      if (userImage.value) {
-        ctx.drawImage(userImage.value, bl, bt);
+      function loadImg(src) {
+        return new Promise((resolve, reject) => {
+          const img = new Image();
+          img.onload = () => resolve(img);
+          img.onerror = reject;
+          img.src = src;
+        });
       }
-    }
 
-    function download() {
-      if (!canvas.value) return;
-      const link = document.createElement('a');
-      link.download = `${selectedMock.value}.png`;
-      link.href = canvas.value.toDataURL('image/png');
-      link.click();
-    }
+      async function render() {
+        if (!spec.value || !canvas.value) return;
+        const s = spec.value;
+        const mockImg = await loadImg(`mocks/img/${s.img}`);
+        const mockW = mockImg.naturalWidth || mockImg.width;
+        const mockH = mockImg.naturalHeight || mockImg.height;
 
-    return { mocks, selectedMock, canvas, onUpload, download };
-  },
-  template: `
-    <div class="min-h-screen bg-gray-100 p-8">
-      <div class="max-w-5xl mx-auto">
+        const innerW = mockW - s.left - s.right;
+        const innerH = mockH - s.top - s.bottom;
+
+        const ssW = userImage.value ? userImage.value.naturalWidth : innerW;
+        const ssH = userImage.value ? userImage.value.naturalHeight : innerH;
+
+        // Scale borders proportionally using geometric mean of area ratio
+        const borderScale = Math.sqrt((ssW * ssH) / (innerW * innerH));
+        const bl = Math.round(s.left * borderScale);
+        const bt = Math.round(s.top * borderScale);
+        const br = Math.round(s.right * borderScale);
+        const bb = Math.round(s.bottom * borderScale);
+
+        // Rasterize mock at scaled size so SVG stays crisp — no pixel upscaling
+        const offW = Math.round(mockW * borderScale);
+        const offH = Math.round(mockH * borderScale);
+        const offscreen = document.createElement('canvas');
+        offscreen.width = offW;
+        offscreen.height = offH;
+        offscreen.getContext('2d').drawImage(mockImg, 0, 0, offW, offH);
+
+        const cvs = canvas.value;
+        const ctx = cvs.getContext('2d');
+        cvs.width = bl + ssW + br;
+        cvs.height = bt + ssH + bb;
+        ctx.clearRect(0, 0, cvs.width, cvs.height);
+
+        // Scaled inner dims in the offscreen
+        const siw = offW - bl - br;
+        const sih = offH - bt - bb;
+
+        // 9-slice from offscreen: corners 1:1, edges stretched in one axis only
+        function ds(sx, sy, sw, sh, dx, dy, dw, dh) {
+          if (sw > 0 && sh > 0 && dw > 0 && dh > 0)
+            ctx.drawImage(offscreen, sx, sy, sw, sh, dx, dy, dw, dh);
+        }
+        // top row
+        ds(0, 0, bl, bt, 0, 0, bl, bt);
+        ds(bl, 0, siw, bt, bl, 0, ssW, bt);
+        ds(bl + siw, 0, br, bt, bl + ssW, 0, br, bt);
+        // middle row
+        ds(0, bt, bl, sih, 0, bt, bl, ssH);
+        ds(bl + siw, bt, br, sih, bl + ssW, bt, br, ssH);
+        // bottom row
+        ds(0, bt + sih, bl, bb, 0, bt + ssH, bl, bb);
+        ds(bl, bt + sih, siw, bb, bl, bt + ssH, ssW, bb);
+        ds(bl + siw, bt + sih, br, bb, bl + ssW, bt + ssH, br, bb);
+
+        if (userImage.value) {
+          ctx.drawImage(userImage.value, bl, bt);
+        }
+      }
+
+      function download() {
+        if (!canvas.value) return;
+        const link = document.createElement('a');
+        link.download = `${selectedMock.value}.png`;
+        link.href = canvas.value.toDataURL('image/png');
+        link.click();
+      }
+
+      return { mocks, selectedMock, canvas, onUpload, download };
+    },
+    template: `
         <h1 class="text-2xl font-bold mb-6 text-gray-800">Screenshot Wrapper</h1>
 
         <div class="bg-white rounded-xl shadow p-5 mb-6 flex flex-wrap gap-5 items-end">
@@ -158,10 +155,30 @@ createApp({
         <div class="bg-white rounded-xl shadow p-6 flex justify-center items-center min-h-48">
           <canvas ref="canvas" class="max-w-full rounded shadow-sm"></canvas>
         </div>
-      </div>
-    </div>
+
+        <footer class="bg-white rounded-xl shadow p-5 mb-6 ">
+          <p>
+            Made by
+            <a class="underline" href="https://koljasam.com/" target="_blank">Kolja Sam</a>.
+          </p>
+
+          <p class="text-base-content/90">
+            Images stay on your device. I track page views with the privacy-friendly <a href="https://www.goatcounter.com/"
+              class="underline" target="_blank">goatcounter</a>, and nothing else.
+          </p>
+
+          <p>If this tiny tool was useful to you, you may want to <a href="https://ko-fi.com/S6S81CWUVD" target="_blank"
+              rel="noopener" class="underline">
+              buy me a coffee
+            </a>.
+          </p>
+          <p>
+            Btw, if you want to modify something (e.g. the mocks): This app is extremely simple (single HTML+JS file) and <a
+              href="https://github.com/koljapluemer/screenshot-mock-wrapper" class="underline" target="_blank">open source</a>.
+          </p>
+        </footer>
   `
-}).mount('#app');
+  }).mount('#app');
 </script>
 
 </html>
