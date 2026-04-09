@@ -1,0 +1,5 @@
+purple-monitor.svg
+80
+82
+135
+68

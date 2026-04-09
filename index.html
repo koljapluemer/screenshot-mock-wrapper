@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en" class="h-full w-full bg-gray-100 ">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -179,5 +180,11 @@
   `
   }).mount('#app');
 </script>
+<script>
+  window.goatcounter = {
+    path: function (p) { return location.host + p }
+  }
+</script>
+<script data-goatcounter="https://koljasam.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 
 </html>
