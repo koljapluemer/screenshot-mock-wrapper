@@ -1,6 +1,8 @@
-basic-laptop
-basic-phone
-purple-laptop
-purple-note
-purple-desktop-window-I
-purple-desktop-window-II
+laptop_polygon_grey.svg
+phone_polygon_grey.svg
+purple-laptop.svg
+purple-note.svg
+window-1.svg
+window-2.svg
+purple-monitor.svg
+phone-duo.svg
