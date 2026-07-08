@@ -28,14 +28,85 @@
 
       const currentSlotDefs = computed(() => {
         if (!spec.value) return [];
-        return spec.value.mode === 'fixed'
-          ? spec.value.slots.map(s => ({ id: s.id, label: s.id }))
-          : [{ id: 'main', label: 'Screenshot' }];
+        if (spec.value.mode === 'fixed') {
+          return spec.value.slots.map(s => ({
+            id: s.id, label: s.id,
+            hint: `Best fit ${s.width}×${s.height} — image is cropped to fill`,
+          }));
+        }
+        const n = spec.value.nativeSlot;
+        return [{
+          id: 'main', label: 'Screenshot',
+          hint: `Recommended ~${n.width}×${n.height} — any size works, frame resizes to fit`,
+        }];
       });
 
-      function parseSpec(svgEl) {
-        const metaEl = svgEl.querySelector('metadata[id="ssw-spec"]');
-        return metaEl ? JSON.parse(metaEl.textContent) : null;
+      // Mocks mark screenshot slots by filling a <rect> or <polygon> with pure green (#00ff00).
+      // One slot -> the frame grows/shrinks to fit the upload (classic single-device mockup).
+      // 2+ slots -> a fixed multi-device layout; each upload is cropped to fill its own slot.
+      function isGreenFill(fill) {
+        if (!fill) return false;
+        const v = fill.trim().toLowerCase();
+        if (v === 'lime' || v === '#00ff00' || v === '#0f0') return true;
+        const hex = v.match(/^#([0-9a-f]{6})$/);
+        if (hex) return hex[1] === '00ff00';
+        const shortHex = v.match(/^#([0-9a-f]{3})$/);
+        if (shortHex) return shortHex[1] === '0f0';
+        const rgb = v.match(/^rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)$/);
+        return !!rgb && +rgb[1] === 0 && +rgb[2] === 255 && +rgb[3] === 0;
+      }
+
+      function elementBBox(el) {
+        if (el.tagName === 'rect') {
+          return {
+            x: +el.getAttribute('x'), y: +el.getAttribute('y'),
+            width: +el.getAttribute('width'), height: +el.getAttribute('height'),
+          };
+        }
+        const pts = el.getAttribute('points').trim().split(/\s+/).map(p => p.split(',').map(Number));
+        const xs = pts.map(p => p[0]), ys = pts.map(p => p[1]);
+        const minX = Math.min(...xs), maxX = Math.max(...xs);
+        const minY = Math.min(...ys), maxY = Math.max(...ys);
+        return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
+      }
+
+      function detectSlots(svgEl) {
+        const [vbMinX, vbMinY] = (svgEl.getAttribute('viewBox') || '0 0 0 0').trim().split(/\s+/).map(Number);
+        const slots = [...svgEl.querySelectorAll('rect, polygon')]
+          .filter(el => isGreenFill(el.getAttribute('fill')))
+          .map((el, i) => {
+            const b = elementBBox(el);
+            return {
+              id: el.getAttribute('id') || `slot-${i + 1}`,
+              x: Math.round(b.x - vbMinX), y: Math.round(b.y - vbMinY),
+              width: Math.round(b.width), height: Math.round(b.height),
+            };
+          });
+        slots.sort((a, b) => a.y - b.y || a.x - b.x); // reading order: top-to-bottom, left-to-right
+        return slots;
+      }
+
+      function prettify(filename) {
+        return filename.replace(/\.svg$/i, '').replace(/[-_]+/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+      }
+
+      function buildSpec(svgEl, file, width, height) {
+        const slots = detectSlots(svgEl);
+        if (!slots.length) {
+          console.warn(`Mock "${file}" has no #00ff00 slot marker — skipping.`);
+          return null;
+        }
+        const name = prettify(file);
+        if (slots.length === 1) {
+          const s = slots[0];
+          return {
+            mode: 'stretch',
+            name,
+            insets: { top: s.y, left: s.x, right: width - (s.x + s.width), bottom: height - (s.y + s.height) },
+            nativeSlot: { width: s.width, height: s.height },
+          };
+        }
+        return { mode: 'fixed', name, slots: slots.map(s => ({ ...s, fit: 'cover' })) };
       }
 
       onMounted(async () => {
@@ -46,17 +117,11 @@
         for (const file of files) {
           const rawText = await (await fetch(`mocks/img/${file}`)).text();
           const svgEl = new DOMParser().parseFromString(rawText, 'image/svg+xml').documentElement;
-          const spec = parseSpec(svgEl);
+          const width = +svgEl.getAttribute('width');
+          const height = +svgEl.getAttribute('height');
+          const spec = buildSpec(svgEl, file, width, height);
           if (!spec) continue;
-          mockCache.set(file, {
-            file,
-            name: spec.name || file,
-            width: +svgEl.getAttribute('width'),
-            height: +svgEl.getAttribute('height'),
-            rawText,
-            spec,
-            img: null,
-          });
+          mockCache.set(file, { file, name: spec.name, width, height, rawText, spec, img: null });
         }
 
         mocks.value = [...mockCache.values()].map(m => ({ file: m.file, name: m.name }));
@@ -221,6 +286,7 @@
             <label class="block text-sm font-medium text-gray-600 mb-1">{{ slotDef.label }}</label>
             <input type="file" accept="image/*" @change="onUpload(slotDef.id, $event)"
               class="block text-sm text-gray-700 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer" />
+            <p class="text-xs text-gray-400 mt-1">{{ slotDef.hint }}</p>
           </div>
 
           <button @click="download"
