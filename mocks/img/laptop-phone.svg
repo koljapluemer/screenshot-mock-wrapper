@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080">
+  <rect id="laptop" x="257.88" y="582.975" width="763.43" height="328.512" fill="#00ff00"/>
+  <rect id="phone" x="1284.743" y="159.44" width="412.557" height="772.012" fill="#00ff00"/>
+  <polygon points="1116.622,948.476 213.053,945.22 208.169,919.171 1106.853,924.055" fill="#757575" opacity="1" stroke="none"/>
+  <polygon points="1114.994,933.824 201.657,928.939 200.029,912.659 1116.622,919.171" fill="#BDBDBD" opacity="0.3" stroke="none"/>
+  <polygon points="239.102,919.171 227.706,570.768 1044.987,565.884 1061.268,925.683" fill="#BDBDBD" opacity="1" stroke="none"/>
+  <polygon points="237.474,577.28 248.87,919.171 1048.243,924.055 1031.963,577.28" fill="#757575" opacity="1" stroke="none"/>
+  <polygon points="639.603,570.768 589.133,574.024 584.249,562.628 624.95,557.744" fill="#BDBDBD" opacity="0.4" stroke="none"/>
+  <polygon points="646.115,572.396 608.67,572.396 610.298,559.372 652.627,557.744" fill="#757575" opacity="0.4" stroke="none"/>
+  <polygon points="603.786,559.372 603.786,570.768 637.975,570.768 637.975,556.116" fill="#757575" opacity="0.4" stroke="none"/>
+  <polygon points="227.706,574.024 240.73,914.287 245.614,919.171 235.846,585.421" fill="#FFFFFF" opacity="0.2" stroke="none"/>
+  <polygon points="1266.054,134.981 1255.404,954.999 1718.07,962.099 1733.452,120.781" fill="#757575" opacity="1" stroke="none"/>
+  <polygon points="1282.62,124.331 1262.504,947.899 1702.687,952.632 1722.803,117.231" fill="#BDBDBD" opacity="0.9" stroke="none"/>
+  <polygon points="1276.703,136.164 1256.588,951.449 1270.787,951.449 1288.536,136.164" fill="#000000" opacity="0.1" stroke="none"/>
+  <polygon points="1256.588,936.066 1721.62,945.533 1720.436,958.549 1245.938,954.999" fill="#000000" opacity="0.1" stroke="none"/>
+  <polygon points="1262.504,130.248 1267.237,158.647 1731.086,150.364 1732.269,124.331" fill="#757575" opacity="0.8" stroke="none"/>
+  <polygon points="1430.531,121.965 1429.348,145.63 1567.792,142.081 1560.692,119.598" fill="#000000" opacity="0.3" stroke="none"/>
+  <polygon points="1432.897,136.164 1567.792,133.797 1568.975,145.63 1428.164,149.18" fill="#000000" opacity="0.3" stroke="none"/>
+  <polygon points="1725.169,377.555 1722.803,448.552 1728.719,448.552 1731.086,385.838" fill="#BDBDBD" opacity="1" stroke="none"/>
+  <polygon points="1723.986,454.468 1720.436,511.266 1728.719,500.617 1731.086,458.018" fill="#BDBDBD" opacity="1" stroke="none"/>
+</svg>

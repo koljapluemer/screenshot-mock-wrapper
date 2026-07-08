@@ -6,3 +6,6 @@ window-1.svg
 window-2.svg
 purple-monitor.svg
 phone-duo.svg
+phone-trio.svg
+laptop-phone.svg
+phone-laptop.svg
