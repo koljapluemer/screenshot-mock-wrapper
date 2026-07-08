@@ -264,8 +264,8 @@
         const base = (entry?.name || selectedMock.value)
           .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
         const link = document.createElement('a');
-        link.download = `${base}.png`;
-        link.href = canvas.value.toDataURL('image/png');
+        link.download = `${base}.webp`;
+        link.href = canvas.value.toDataURL('image/webp');
         link.click();
       }
 
@@ -296,7 +296,7 @@
         </div>
 
         <div class="bg-white rounded-xl shadow p-6 flex justify-center items-center min-h-48">
-          <canvas ref="canvas" class="max-w-full rounded shadow-sm"></canvas>
+          <canvas ref="canvas" class="max-w-full max-h-[65vh] w-auto h-auto object-contain rounded shadow-sm"></canvas>
         </div>
 
         <footer class="bg-white rounded-xl shadow p-5 mb-6 ">
